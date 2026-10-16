@@ -1,0 +1,163 @@
+html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TurnoControl - Control Horario</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --success: #16a34a;
+            --danger: #dc2626;
+            --bg: #f8fafc;
+            --card: #ffffff;
+            --text: #1e293b;
+        }
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 16px;
+        }
+        .container {
+            max-width: 480px;
+            margin: 0 auto;
+        }
+        header {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+        h1 {
+            font-size: 1.5rem;
+            color: var(--primary);
+            margin: 0;
+        }
+        p.subtitle {
+            font-size: 0.875rem;
+            color: #64748b;
+        }
+        .card {
+            background: var(--card);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            margin-bottom: 16px;
+            text-align: center;
+        }
+        .clock {
+            font-size: 2rem;
+            font-weight: bold;
+            margin: 10px 0;
+            color: var(--primary);
+        }
+        .btn-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 16px;
+        }
+        button {
+            padding: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            color: white;
+            transition: opacity 0.2s;
+        }
+        button:active { opacity: 0.8; }
+        .btn-in { background-color: var(--success); }
+        .btn-out { background-color: var(--danger); }
+        .history {
+            margin-top: 20px;
+        }
+        .history h3 {
+            font-size: 1rem;
+            margin-bottom: 8px;
+        }
+        ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        li {
+            background: #f1f5f9;
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 6px;
+            font-size: 0.875rem;
+            display: flex;
+            justify-content: space-between;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>TurnoControl</h1>
+            <p class="subtitle">Control Horario y Gestión de Personal</p>
+        </header>
+
+        <div class="card">
+            <p>Hora Actual</p>
+            <div class="clock" id="live-clock">00:00:00</div>
+            <div class="btn-grid">
+                <button class="btn-in" onclick="registrar('Entrada')">Fichar Entrada</button>
+                <button class="btn-out" onclick="registrar('Salida')">Fichar Salida</button>
+            </div>
+        </div>
+
+        <div class="card history">
+            <h3>Registros Recientes</h3>
+            <ul id="log-list">
+                <!-- Se llenará dinámicamente -->
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // Reloj en tiempo real
+        setInterval(() => {
+            const now = new Date();
+            document.getElementById('live-clock').innerText = now.toLocaleTimeString();
+        }, 1000);
+
+        // Sistema de fichaje local
+        function registrar(tipo) {
+            const now = new Date();
+            const fechaStr = now.toLocaleDateString() + ' ' + now.toLocaleTimeString();
+            let registros = JSON.parse(localStorage.getItem('turnocontrol_logs') || '[]');
+            
+            registros.unshift({ tipo, fecha: fechaStr });
+            if (registros.max > 20) registros.pop();
+            
+            localStorage.setItem('turnocontrol_logs', JSON.stringify(registros));
+            actualizarLista();
+        }
+
+        function actualizarLista() {
+            const registros = JSON.parse(localStorage.getItem('turnocontrol_logs') || '[]');
+            const lista = document.getElementById('log-list');
+            lista.innerHTML = '';
+            
+            if (registros.length === 0) {
+                lista.innerHTML = '<li style="justify-content: center; color: #64748b;">No hay registros aún</li>';
+                return;
+            }
+
+            registros.forEach(reg => {
+                const li = document.createElement('li');
+                li.innerHTML = `<span><strong>${reg.tipo}</strong></span><span>${reg.fecha}</span>`;
+                lista.appendChild(li);
+            });
+        }
+
+        // Cargar al iniciar
+        actualizarLista();
+    </script>
+</body>
+</html>
